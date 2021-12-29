@@ -60,6 +60,26 @@ namespace DNTCaptcha.Core
 
             var (captchaText, inputText, cookieToken) = getFormValues(httpContext);
 
+            if (!ValidateCaptcha(captchaText, inputText, cookieToken, 
+                captchaGeneratorLanguage, captchaGeneratorDisplayMode, 
+                out var decryptedText))
+                return false;
+
+            return isValidCookie(httpContext, decryptedText, cookieToken);
+        }
+
+        /// <summary>
+        /// Validates the input number.
+        /// </summary>
+        /// <returns></returns>
+        public bool ValidateCaptcha(
+            string captchaText, string inputText, string cookieToken,
+            Language captchaGeneratorLanguage,
+            DisplayMode captchaGeneratorDisplayMode,
+            out string decryptedText)
+        {
+            decryptedText = null;
+            
             if (string.IsNullOrEmpty(captchaText))
             {
                 _logger.LogDebug("CaptchaHiddenInput is empty.");
@@ -84,7 +104,7 @@ namespace DNTCaptcha.Core
                 return false;
             }
 
-            var decryptedText = _captchaProtectionProvider.Decrypt(captchaText);
+            decryptedText = _captchaProtectionProvider.Decrypt(captchaText);
 
             var numberToText = _captchaTextProvider(captchaGeneratorDisplayMode).GetText(inputNumber, captchaGeneratorLanguage);
             if (decryptedText?.Equals(numberToText, StringComparison.Ordinal) != true)
@@ -93,7 +113,8 @@ namespace DNTCaptcha.Core
                 return false;
             }
 
-            return isValidCookie(httpContext, decryptedText, cookieToken);
+            //TODO check cookieToken
+            return true;
         }
 
         private bool isValidCookie(HttpContext httpContext, string decryptedText, string? cookieToken)
