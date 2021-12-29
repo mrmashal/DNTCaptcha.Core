@@ -3,7 +3,7 @@
     <Description>DNTCaptcha.Core is a captcha generator and validator for ASP.NET Core applications.</Description>
     <VersionPrefix>4.3.1</VersionPrefix>
     <Authors>Vahid Nasiri</Authors>
-    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>DNTCaptcha.Core</AssemblyName>
     <PackageId>DNTCaptcha.Core</PackageId>
@@ -33,44 +33,16 @@
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>9</LangVersion>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-    <Deterministic>true</Deterministic>
-    <Features>strict</Features>
-    <ReportAnalyzer>true</ReportAnalyzer>
     <NoWarn>NU5104</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.2.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Meziantou.Analyzer" Version="1.0.675">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="AsyncFixer" Version="1.5.1">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Asyncify" Version="0.9.7">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.31.0.39249">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -83,13 +55,4 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13.15" />
   </ItemGroup>
-  <PropertyGroup Condition="('$(TargetFramework)' == 'netcoreapp3.1')">
-    <DefineConstants>NETCOREAPP3_0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="('$(TargetFramework)' == 'net5.0')">
-    <DefineConstants>NET5_0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <DefineConstants>NET6_0</DefineConstants>
-  </PropertyGroup>
 </Project>
