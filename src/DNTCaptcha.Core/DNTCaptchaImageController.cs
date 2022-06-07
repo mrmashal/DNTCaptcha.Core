@@ -138,8 +138,8 @@ namespace DNTCaptcha.Core
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to refresh the captcha image.");
-                return BadRequest(ex.ToString());
+                _logger.LogDebug(ex, "Failed to refresh the captcha image.");
+                return BadRequest("Turn on the `LogDebug` level, to see the actual details of the exception, in the logs.");
             }
         }
 
@@ -185,8 +185,8 @@ namespace DNTCaptcha.Core
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to show the captcha image.");
-                return BadRequest(ex.ToString());
+                _logger.LogDebug(ex, "Failed to show the captcha image.");
+                return BadRequest("Turn on the `LogDebug` level, to see the actual details of the exception, in the logs.");
             }
         }
     }

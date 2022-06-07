@@ -145,10 +145,7 @@ namespace DNTCaptcha.Core
                 _logger.LogDebug($"isValidCookie:: {cookieValue} != {decryptedText}");
             }
 
-            if (areEqual)
-            {
-                _captchaStorageProvider.Remove(httpContext, cookieToken);
-            }
+            _captchaStorageProvider.Remove(httpContext, cookieToken);
             return areEqual;
         }
 
