@@ -113,6 +113,10 @@ namespace DNTCaptcha.Core
             if (decryptedText?.Equals(numberToText, StringComparison.Ordinal) != true)
             {
                 _logger.LogDebug($"{decryptedText} != {numberToText}");
+
+                //mmm Also remove the cookieToken from storage
+                RemoveCookie(httpContext, cookieToken);
+
                 return false;
             }
 
@@ -149,6 +153,25 @@ namespace DNTCaptcha.Core
 
             _captchaStorageProvider.Remove(httpContext, cookieToken);
             return areEqual;
+        }
+
+        //mmm
+        private void RemoveCookie(HttpContext httpContext, string cookieToken)
+        {
+            if (string.IsNullOrEmpty(cookieToken))
+            {
+                _logger.LogDebug("CaptchaHiddenTokenName is empty.");
+                return;
+            }
+
+            cookieToken = _captchaProtectionProvider.Decrypt(cookieToken);
+            if (string.IsNullOrEmpty(cookieToken))
+            {
+                _logger.LogDebug("CaptchaHiddenTokenName is invalid.");
+                return;
+            }
+
+            _captchaStorageProvider.Remove(httpContext, cookieToken);
         }
 
         private (string captchaText, string inputText, string cookieToken) getFormValues(HttpContext httpContext)
