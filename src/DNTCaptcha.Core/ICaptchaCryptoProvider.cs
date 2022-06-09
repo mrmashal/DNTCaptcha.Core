@@ -8,12 +8,12 @@ namespace DNTCaptcha.Core
         /// <summary>
         /// Decrypts the message
         /// </summary>
-        string? Decrypt(string inputText);
+        string? Decrypt(string inputText, bool ecb = false); //mmm
 
         /// <summary>
         /// Encrypts the message
         /// </summary>
-        string Encrypt(string inputText);
+        string Encrypt(string inputText, bool ecb = false); //mmm
 
         /// <summary>
         /// Creates the hash of the message

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -12,6 +16,9 @@ namespace DNTCaptcha.Core
     /// </summary>
     public class DNTCaptchaApiProvider : IDNTCaptchaApiProvider
     {
+        private static Random _rnd = new Random();
+        private static List<string> _secrets = null;
+
         private readonly ICaptchaCryptoProvider _captchaProtectionProvider;
         private readonly ICaptchaStorageProvider _captchaStorageProvider;
         private readonly Func<DisplayMode, ICaptchaTextProvider> _captchaTextProvider;
@@ -60,10 +67,12 @@ namespace DNTCaptcha.Core
                 throw new InvalidOperationException("`_httpContextAccessor.HttpContext` is null.");
             }
 
+            var png = captchaAttributes.PngPercent > 0 && _rnd.Next(100) < captchaAttributes.PngPercent; //mmm
             var number = _randomNumberProvider.NextNumber(captchaAttributes.Min, captchaAttributes.Max);
             var randomText = _captchaTextProvider(captchaAttributes.DisplayMode).GetText(number, captchaAttributes.Language);
             var encryptedText = _captchaProtectionProvider.Encrypt(randomText);
-            var captchaImageUrl = getCaptchaImageUrl(captchaAttributes, encryptedText);
+            var pngEncryptedText = png ? _captchaProtectionProvider.Encrypt(randomText, png) : encryptedText;
+            var captchaImageUrl = getCaptchaImageUrl(captchaAttributes, pngEncryptedText, png);
             var captchaDivId = Invariant($"{_captchaOptions.CaptchaClass}{Guid.NewGuid():N}{_randomNumberProvider.NextNumber(captchaAttributes.Min, captchaAttributes.Max)}");
             var cookieToken = $".{captchaDivId}";
             var hiddenInputToken = _captchaProtectionProvider.Encrypt(cookieToken);
@@ -79,7 +88,7 @@ namespace DNTCaptcha.Core
             };
         }
 
-        private string getCaptchaImageUrl(DNTCaptchaTagHelperHtmlAttributes captchaAttributes, string encryptedText)
+        private string getCaptchaImageUrl(DNTCaptchaTagHelperHtmlAttributes captchaAttributes, string encryptedText, bool png)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -89,13 +98,13 @@ namespace DNTCaptcha.Core
             var values = new CaptchaImageParams
             {
                 Text = encryptedText,
-                RndDate = DateTime.Now.Ticks.ToString(CultureInfo.InvariantCulture),
+                RndDate = GetRndDate(captchaAttributes, png),
                 ForeColor = captchaAttributes.ForeColor,
                 BackColor = captchaAttributes.BackColor,
                 FontSize = captchaAttributes.FontSize,
                 FontName = captchaAttributes.FontName
             };
-            var encryptSerializedValues = _captchaProtectionProvider.Encrypt(_serializationProvider.Serialize(values));
+            var encryptSerializedValues = _captchaProtectionProvider.Encrypt(_serializationProvider.Serialize(values), png);
             var actionUrl = captchaAttributes.UseRelativeUrls ?
                 _urlHelper.Action(action: nameof(DNTCaptchaImageController.Show),
                             controller: nameof(DNTCaptchaImageController).Replace("Controller", string.Empty, StringComparison.Ordinal),
@@ -104,13 +113,35 @@ namespace DNTCaptcha.Core
                             controller: nameof(DNTCaptchaImageController).Replace("Controller", string.Empty, StringComparison.Ordinal),
                             values: new { data = encryptSerializedValues, area = "" },
                             protocol: _httpContextAccessor.HttpContext.Request.Scheme);
-
+            
             if (string.IsNullOrWhiteSpace(actionUrl))
             {
                 throw new InvalidOperationException("It's not possible to determine the URL of the `DNTCaptchaImageController.Show` method. Please register the `services.AddControllers()` and `endpoints.MapControllerRoute(...)`.");
             }
-
+            if (png && !actionUrl.EndsWith(".png")) actionUrl += ".png";
             return actionUrl;
+        }
+
+        private string GetRndDate(DNTCaptchaTagHelperHtmlAttributes captchaAttributes, bool png)
+        {
+            if (!png)
+                return DateTime.Now.Ticks.ToString(CultureInfo.InvariantCulture);
+
+            if (captchaAttributes.Multiplier < 1) captchaAttributes.Multiplier = 1;
+
+            if (_secrets == null)
+                _secrets = new(new string[captchaAttributes.Multiplier]);
+
+            var index = _rnd.Next(captchaAttributes.Multiplier);
+
+            if (_secrets[index] == null)
+            {
+                var b = new byte[16];
+                RandomNumberGenerator.Fill(b);
+                _secrets[index] = Encoding.UTF8.GetString(b);
+            }
+
+            return _secrets[index];
         }
     }
 }

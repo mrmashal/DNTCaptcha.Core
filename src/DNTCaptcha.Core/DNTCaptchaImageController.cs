@@ -151,8 +151,9 @@ namespace DNTCaptcha.Core
         /// <summary>
         /// Creates the captcha image.
         /// </summary>
-        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true, Duration = 0)]
-        [HttpGet("[action]"), HttpPost("[action]")]
+        //[ResponseCache(Location = ResponseCacheLocation.None, NoStore = true, Duration = 0)]
+        //[HttpGet("[action]"), HttpPost("[action]")]
+        [HttpGet("[action]/{data}")]
         public IActionResult Show(string data)
         {
             try
@@ -162,7 +163,14 @@ namespace DNTCaptcha.Core
                     return BadRequest("The data is null or empty.");
                 }
 
-                var decryptedModel = _captchaProtectionProvider.Decrypt(data);
+                var png = false;
+                if (data.Length > 4 && data.EndsWith(".png"))
+                {
+                    data = data.Substring(0, data.Length - 4);
+                    png = true;
+                }
+
+                var decryptedModel = _captchaProtectionProvider.Decrypt(data, png);
                 if (decryptedModel == null)
                 {
                     return BadRequest("Couldn't decrypt the data.");
@@ -174,7 +182,7 @@ namespace DNTCaptcha.Core
                     return BadRequest("Couldn't deserialize the model.");
                 }
 
-                var decryptedText = _captchaProtectionProvider.Decrypt(model.Text);
+                var decryptedText = _captchaProtectionProvider.Decrypt(model.Text, png);
                 if (decryptedText == null)
                 {
                     return BadRequest("Couldn't decrypt the text.");

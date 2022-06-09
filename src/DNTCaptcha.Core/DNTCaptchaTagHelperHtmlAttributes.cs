@@ -10,6 +10,14 @@ namespace DNTCaptcha.Core
     public class DNTCaptchaTagHelperHtmlAttributes
     {
         /// <summary>
+        /// mmm
+        /// </summary>
+        public int PngPercent { get; set; }
+        public int Multiplier { get; set; }
+
+
+
+        /// <summary>
         /// Create an absolute "fully qualified" url from an action and controller.
         /// </summary>
         [HtmlAttributeName("asp-use-relative-urls")]

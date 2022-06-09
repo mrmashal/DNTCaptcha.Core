@@ -42,7 +42,7 @@ namespace DNTCaptcha.Core
         /// <summary>
         /// Decrypts the message
         /// </summary>
-        public string? Decrypt(string inputText)
+        public string? Decrypt(string inputText, bool ecb = false)
         {
             if (string.IsNullOrWhiteSpace(inputText))
             {
@@ -50,14 +50,14 @@ namespace DNTCaptcha.Core
             }
 
             var inputBytes = WebEncoders.Base64UrlDecode(inputText);
-            var bytes = decrypt(inputBytes);
+            var bytes = ecb ? decryptEcb(inputBytes) : decrypt(inputBytes);
             return Encoding.UTF8.GetString(bytes);
         }
 
         /// <summary>
         /// Encrypts the message
         /// </summary>
-        public string Encrypt(string inputText)
+        public string Encrypt(string inputText, bool ecb = false)
         {
             if (string.IsNullOrWhiteSpace(inputText))
             {
@@ -65,18 +65,18 @@ namespace DNTCaptcha.Core
             }
 
             var inputBytes = Encoding.UTF8.GetBytes(inputText);
-            var bytes = encrypt(inputBytes);
+            var bytes = ecb ? encryptEcb(inputBytes) : encrypt(inputBytes);
             return WebEncoders.Base64UrlEncode(bytes);
         }
 
         private byte[] encrypt(byte[] data)
         {
             using (var des = new TripleDESCryptoServiceProvider
-            {
-                Key = _keyBytes,
-                Mode = CipherMode.CBC,
-                Padding = PaddingMode.PKCS7
-            })
+                   {
+                       Key = _keyBytes,
+                       Mode = CipherMode.CBC,
+                       Padding = PaddingMode.PKCS7
+                   })
             {
                 using var encryptor = des.CreateEncryptor();
                 using var cipherStream = new MemoryStream();
@@ -85,6 +85,27 @@ namespace DNTCaptcha.Core
                 {
                     // prepend IV to data
                     cipherStream.Write(des.IV); // This is an auto-generated random key
+                    binaryWriter.Write(data);
+                    cryptoStream.FlushFinalBlock();
+                }
+                return cipherStream.ToArray();
+            }
+        }
+
+        private byte[] encryptEcb(byte[] data)
+        {
+            using (var des = new TripleDESCryptoServiceProvider
+                   {
+                       Key = _keyBytes,
+                       Mode = CipherMode.ECB,
+                       Padding = PaddingMode.PKCS7
+                   })
+            {
+                using var encryptor = des.CreateEncryptor();
+                using var cipherStream = new MemoryStream();
+                using (var cryptoStream = new CryptoStream(cipherStream, encryptor, CryptoStreamMode.Write))
+                using (var binaryWriter = new BinaryWriter(cryptoStream))
+                {
                     binaryWriter.Write(data);
                     cryptoStream.FlushFinalBlock();
                 }
@@ -114,6 +135,26 @@ namespace DNTCaptcha.Core
                         iv.Length,
                         data.Length - iv.Length
                     );
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private byte[] decryptEcb(byte[] data)
+        {
+            using (var des = new TripleDESCryptoServiceProvider
+                   {
+                       Key = _keyBytes,
+                       Mode = CipherMode.ECB,
+                       Padding = PaddingMode.PKCS7
+                   })
+            {
+                var iv = new byte[8];
+                using var ms = new MemoryStream();
+                using (var decryptor = new CryptoStream(ms, des.CreateDecryptor(_keyBytes, iv), CryptoStreamMode.Write))
+                using (var binaryWriter = new BinaryWriter(decryptor))
+                {
+                    binaryWriter.Write(data);
                 }
                 return ms.ToArray();
             }
