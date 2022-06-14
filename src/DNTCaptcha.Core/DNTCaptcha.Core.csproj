@@ -36,6 +36,7 @@
     <NoWarn>NU5104</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Abp" Version="6.3.0" />
     <PackageReference Include="AsyncFixer" Version="1.5.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; buildtransitive</IncludeAssets>

@@ -12,6 +12,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System;
+using Abp.Auditing;
 
 namespace DNTCaptcha.Core
 {
@@ -20,6 +21,7 @@ namespace DNTCaptcha.Core
     /// </summary>
     [Route("[controller]")]
     [AllowAnonymous]
+    [DisableAuditing]
     public class DNTCaptchaImageController : Controller
     {
         private readonly ICaptchaImageProvider _captchaImageProvider;
