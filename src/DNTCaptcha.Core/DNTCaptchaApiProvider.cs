@@ -118,7 +118,7 @@ namespace DNTCaptcha.Core
             {
                 throw new InvalidOperationException("It's not possible to determine the URL of the `DNTCaptchaImageController.Show` method. Please register the `services.AddControllers()` and `endpoints.MapControllerRoute(...)`.");
             }
-            if (png && !actionUrl.EndsWith(".png")) actionUrl += ".png";
+            if (png) actionUrl += ".png";
             return actionUrl;
         }
 
