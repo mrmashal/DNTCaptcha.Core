@@ -1,59 +1,71 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Description>DNTCaptcha.Core is a captcha generator and validator for ASP.NET Core applications.</Description>
-    <VersionPrefix>4.3.3</VersionPrefix>
-    <Authors>Vahid Nasiri</Authors>
-    <TargetFrameworks>net8.0</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyName>DNTCaptcha.Core</AssemblyName>
-    <PackageId>DNTCaptcha.Core</PackageId>
-    <PackageTags>MVC;aspnetcore;captcha;.NET Core</PackageTags>
-    <PackageProjectUrl>https://github.com/VahidN/DNTCaptcha.Core</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/VahidN/DNTCaptcha.Core</RepositoryUrl>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <DebugType>embedded</DebugType>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <RestoreAdditionalProjectSources>
-      https://api.nuget.org/v3/index.json;
-      https://www.myget.org/F/sixlabors/api/v3/index.json;
-    </RestoreAdditionalProjectSources>
-     <RestoreSources>
-      $(RestoreSources);
-      https://api.nuget.org/v3/index.json;
-	  https://www.myget.org/F/sixlabors/api/v3/index.json;
-    </RestoreSources>
-  </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>9</LangVersion>
-    <NoWarn>NU5104</NoWarn>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Abp" Version="9.4.1" />
-    <PackageReference Include="AsyncFixer" Version="1.5.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Asyncify" Version="0.9.7">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PlatformTarget>anycpu</PlatformTarget>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
-  </ItemGroup>
+    <PropertyGroup>
+        <Description>DNTCaptcha.Core is a captcha generator and validator for ASP.NET Core applications.</Description>
+        <VersionPrefix>5.2.8</VersionPrefix>
+        <Authors>Vahid Nasiri</Authors>
+        <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;</TargetFrameworks>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AssemblyName>DNTCaptcha.Core</AssemblyName>
+        <PackageId>DNTCaptcha.Core</PackageId>
+        <PackageTags>MVC;aspnetcore;captcha;.NET Core</PackageTags>
+        <PackageProjectUrl>https://github.com/VahidN/DNTCaptcha.Core</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/VahidN/DNTCaptcha.Core</RepositoryUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+        <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+        <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <DebugType>embedded</DebugType>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+    <PropertyGroup>
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
+        <WarningsNotAsErrors Condition="'$(Configuration)' != 'Release'">
+            $(WarningsNotAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
+        </WarningsNotAsErrors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <NoWarn>NU5104</NoWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Abp" Version="9.4.1" />
+        <PackageReference Include="AsyncFixer" Version="1.6.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Asyncify" Version="0.9.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <PlatformTarget>anycpu</PlatformTarget>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <PackageReference Include="SkiaSharp" Version="2.88.9"/>
+        <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.9"/>
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.9" />
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.3" />
+    </ItemGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <DefineConstants>NET6_0</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net7.0'">
+        <DefineConstants>NET7_0</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+        <DefineConstants>NET8_0</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+        <DefineConstants>NET9_0</DefineConstants>
+    </PropertyGroup>
 </Project>

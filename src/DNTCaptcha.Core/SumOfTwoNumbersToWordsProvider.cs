@@ -1,43 +1,27 @@
-using System;
+namespace DNTCaptcha.Core;
 
-namespace DNTCaptcha.Core
+/// <summary>
+///     SumOfTwoNumbersToWords Provider
+/// </summary>
+/// <remarks>
+///     SumOfTwoNumbersToWords Provider
+/// </remarks>
+public class SumOfTwoNumbersToWordsProvider(
+    IRandomNumberProvider randomNumberProvider,
+    HumanReadableIntegerProvider humanReadableIntegerProvider) : ICaptchaTextProvider
 {
     /// <summary>
-    /// SumOfTwoNumbersToWords Provider
+    ///     display a numeric value using the equivalent text
     /// </summary>
-    public class SumOfTwoNumbersToWordsProvider : ICaptchaTextProvider
+    /// <param name="number">input number</param>
+    /// <param name="language">local language</param>
+    /// <returns>the equivalent text</returns>
+    public string GetText(int number, Language language)
     {
-        private readonly int _randomNumber;
-        private readonly HumanReadableIntegerProvider _humanReadableIntegerProvider;
+        var randomNumber = randomNumberProvider.NextNumber(min: 1, number);
 
-        /// <summary>
-        /// SumOfTwoNumbersToWords Provider
-        /// </summary>
-        public SumOfTwoNumbersToWordsProvider(
-            IRandomNumberProvider randomNumberProvider,
-            HumanReadableIntegerProvider humanReadableIntegerProvider)
-        {
-            if (randomNumberProvider == null)
-            {
-                throw new ArgumentNullException(nameof(randomNumberProvider));
-            }
-
-            _randomNumber = randomNumberProvider.NextNumber(1, 7);
-            _humanReadableIntegerProvider = humanReadableIntegerProvider;
-        }
-
-        /// <summary>
-        /// display a numeric value using the equivalent text
-        /// </summary>
-        /// <param name="number">input number</param>
-        /// <param name="language">local language</param>
-        /// <returns>the equivalent text</returns>
-        public string GetText(long number, Language language)
-        {
-            var text = number > _randomNumber ?
-                   $"{_humanReadableIntegerProvider.NumberToText(number - _randomNumber, language)} + {_humanReadableIntegerProvider.NumberToText(_randomNumber, language)}" :
-                   $"{_humanReadableIntegerProvider.NumberToText(0, language)} + {_humanReadableIntegerProvider.NumberToText(number, language)}";
-            return language == Language.Persian ? text.ToPersianNumbers() : text;
-        }
+        return number > randomNumber
+            ? $"{humanReadableIntegerProvider.NumberToText(number - randomNumber, language)} + {humanReadableIntegerProvider.NumberToText(randomNumber, language)}"
+            : $"{humanReadableIntegerProvider.NumberToText(number: 0, language)} + {humanReadableIntegerProvider.NumberToText(number, language)}";
     }
 }
