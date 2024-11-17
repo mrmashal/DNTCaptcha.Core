@@ -83,8 +83,8 @@ public class DNTCaptchaImageController(
     ///     Refresh the captcha
     /// </summary>
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true, Duration = 0)]
-    [HttpGet(template: "[action]")]
-    [HttpPost(template: "[action]")]
+    [HttpGet]
+    [HttpPost]
     public IActionResult Refresh(string data)
     {
         try
@@ -94,7 +94,14 @@ public class DNTCaptchaImageController(
                 return BadRequest(TheReceivedDataIsNullOrEmpty);
             }
 
-            var decryptedModel = _captchaProtectionProvider.Decrypt(data);
+            var png = false;
+            if (data.Length > 4 && data.EndsWith(".png"))
+            {
+                data = data.Substring(0, data.Length - 4);
+                png = true;
+            }
+
+            var decryptedModel = _captchaProtectionProvider.Decrypt(data, png);
 
             if (decryptedModel == null)
             {
@@ -181,8 +188,8 @@ public class DNTCaptchaImageController(
     //[ResponseCache(Location = ResponseCacheLocation.None, NoStore = true, Duration = 0)]
     //[HttpGet(template: "[action]")]
     //[HttpPost(template: "[action]")]
-    [HttpGet("[action]/{data}")]
-    [HttpPost("[action]/{data}")]
+    [HttpGet("{data}")]
+    [HttpPost("{data}")]
     public IActionResult Show(string data)
     {
         try
@@ -199,7 +206,7 @@ public class DNTCaptchaImageController(
                 png = true;
             }
 
-            var decryptedModel = _captchaProtectionProvider.Decrypt(data);
+            var decryptedModel = _captchaProtectionProvider.Decrypt(data, png);
 
             if (decryptedModel == null)
             {
