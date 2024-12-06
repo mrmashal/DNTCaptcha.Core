@@ -3,7 +3,7 @@
         <Description>DNTCaptcha.Core is a captcha generator and validator for ASP.NET Core applications.</Description>
         <VersionPrefix>5.2.8</VersionPrefix>
         <Authors>Vahid Nasiri</Authors>
-        <TargetFrameworks>net8.0;net7.0;net6.0;</TargetFrameworks>
+        <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;</TargetFrameworks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AssemblyName>DNTCaptcha.Core</AssemblyName>
         <PackageId>DNTCaptcha.Core</PackageId>
@@ -29,7 +29,7 @@
         </WarningsNotAsErrors>
     </PropertyGroup>
     <PropertyGroup>
-        <LangVersion>preview</LangVersion>
+        <LangVersion>latest</LangVersion>
         <NoWarn>NU5104</NoWarn>
     </PropertyGroup>
     <ItemGroup>
