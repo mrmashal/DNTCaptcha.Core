@@ -38,6 +38,7 @@ public class DNTCaptchaImageController(
     ICaptchaStorageProvider captchaStorageProvider,
     ILogger<DNTCaptchaImageController> logger,
     ISerializationProvider serializationProvider,
+    Func<DisplayMode, ICaptchaTextProvider> captchaTextProvider, //mmm
     IOptions<DNTCaptchaOptions> options) : Controller
 {
     private const string TheReceivedDataIsNullOrEmpty = "The received data is null or empty.";
@@ -72,6 +73,10 @@ public class DNTCaptchaImageController(
 
     private readonly ITempDataProvider _tempDataProvider =
         tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
+
+    //mmm
+    private readonly Func<DisplayMode, ICaptchaTextProvider> _captchaTextProvider =
+        captchaTextProvider ?? throw new ArgumentNullException(nameof(captchaTextProvider));
 
     /// <summary>
     ///     The ViewContext Provider
@@ -226,6 +231,38 @@ public class DNTCaptchaImageController(
             {
                 return BadRequest(error: "Couldn't decrypt the text.");
             }
+
+            var image = _captchaImageProvider.DrawCaptcha(decryptedText, model.ForeColor, model.BackColor,
+                model.FontSize, model.FontName);
+
+            return new FileContentResult(image, contentType: "image/png");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, message: "Failed to show the captcha image.");
+
+            return _options.ShowExceptions ? BadRequest(ex.ToString()) : BadRequest(TurnOnTheLogDebugLevel);
+        }
+    }
+
+    //mmm
+    [HttpGet("{number}")]
+    [HttpPost("{number}")]
+    public IActionResult ShowForLoadTest(int number)
+    {
+        try
+        {
+            var model = new CaptchaImageParams
+            {
+                BackColor = "#f7f3f3",
+                FontName = "Vazir",
+                FontSize = 36,
+                ForeColor = "#111111",
+            };
+            var decryptedText = _captchaTextProvider(DisplayMode.NumberToWord)
+                .GetText(number, Language.Persian);
+
+
 
             var image = _captchaImageProvider.DrawCaptcha(decryptedText, model.ForeColor, model.BackColor,
                 model.FontSize, model.FontName);
