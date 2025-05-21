@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using Phaa.AzmoonOnline.App;
 using static System.FormattableString;
 
 namespace DNTCaptcha.Core;
@@ -25,6 +28,8 @@ public class DNTCaptchaApiProvider(
     ISerializationProvider serializationProvider,
     IHttpContextAccessor httpContextAccessor,
     IUrlHelper urlHelper,
+    IDistributedCache distributedCache, //mmm
+    DntCaptchaSettings dntCaptchaSettings, //mmm
     IOptions<DNTCaptchaOptions> options) : IDNTCaptchaApiProvider
 {
     private readonly DNTCaptchaOptions _captchaOptions =
@@ -52,8 +57,12 @@ public class DNTCaptchaApiProvider(
     private readonly IUrlHelper _urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
 
     //mmm
-    private static Random _rnd = new Random();
-    private static List<string> _secrets = null;
+    private const string SecretCacheKeyPrefix = ".CaptchaSecret:";
+    private readonly IDistributedCache _distributedCache =
+        distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+    private readonly DntCaptchaSettings _dntCaptchaSettings =
+        dntCaptchaSettings ?? throw new ArgumentNullException(nameof(dntCaptchaSettings));
+    private static Random Rnd = new Random();
 
     /// <summary>
     ///     Creates DNTCaptcha
@@ -61,6 +70,8 @@ public class DNTCaptchaApiProvider(
     /// <param name="captchaAttributes">captcha attributes</param>
     public DNTCaptchaApiResponse CreateDNTCaptcha(DNTCaptchaTagHelperHtmlAttributes captchaAttributes)
     {
+        using var span = Diag.Span("CreateDNTCaptcha", "captcha");
+
         if (captchaAttributes == null)
         {
             throw new ArgumentNullException(nameof(captchaAttributes));
@@ -71,7 +82,7 @@ public class DNTCaptchaApiProvider(
             throw new InvalidOperationException(message: "`_httpContextAccessor.HttpContext` is null.");
         }
 
-        var png = captchaAttributes.PngPercent > 0 && _rnd.Next(100) < captchaAttributes.PngPercent; //mmm
+        var png = _dntCaptchaSettings.PngPercent > 0 && Rnd.Next(100) < _dntCaptchaSettings.PngPercent; //mmm
 
         var number = _randomNumberProvider.NextNumber(captchaAttributes.Min, captchaAttributes.Max);
 
@@ -104,6 +115,8 @@ public class DNTCaptchaApiProvider(
 
     private string GetCaptchaImageUrl(DNTCaptchaTagHelperHtmlAttributes captchaAttributes, string encryptedText, bool png)
     {
+        using var span = Diag.Span("GetCaptchaImageUrl", "captcha");
+
         if (_httpContextAccessor.HttpContext == null)
         {
             throw new InvalidOperationException(message: "`_httpContextAccessor.HttpContext` is null.");
@@ -156,20 +169,20 @@ public class DNTCaptchaApiProvider(
         if (!png)
             return DateTime.Now.Ticks.ToString(CultureInfo.InvariantCulture);
 
-        if (captchaAttributes.Multiplier < 1) captchaAttributes.Multiplier = 1;
+        if (_dntCaptchaSettings.PngMultiplier < 1) _dntCaptchaSettings.PngMultiplier = 1;
 
-        if (_secrets == null)
-            _secrets = new(new string[captchaAttributes.Multiplier]);
+        var index = Rnd.Next(_dntCaptchaSettings.PngMultiplier);
+        var secretCacheKey = $"{SecretCacheKeyPrefix}{index}";
 
-        var index = _rnd.Next(captchaAttributes.Multiplier);
-
-        if (_secrets[index] == null)
+        var secretValueBytes = _distributedCache.Get(secretCacheKey);
+        if (secretValueBytes == null)
         {
             var b = new byte[16];
             RandomNumberGenerator.Fill(b);
-            _secrets[index] = Encoding.UTF8.GetString(b);
+            secretValueBytes = b;
+            _distributedCache.Set(secretCacheKey, secretValueBytes);
         }
 
-        return _secrets[index];
+        return Encoding.UTF8.GetString(secretValueBytes);
     }
 }

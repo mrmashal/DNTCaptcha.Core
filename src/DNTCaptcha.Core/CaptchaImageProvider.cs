@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using HarfBuzzSharp;
 using Microsoft.Extensions.Options;
+using Phaa.AzmoonOnline.App;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 using Buffer = HarfBuzzSharp.Buffer;
@@ -35,6 +36,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
     /// </summary>
     public byte[] DrawCaptcha(string text, string foreColor, string backColor, float fontSize, string fontName)
     {
+        using var span = Diag.Span("DrawCaptcha", "captcha");
+
         var fontType = GetFont(fontName, _options.CustomFontPath) ?? throw new InvalidOperationException(
             message:
             "`fontType` is null. It's better to set this option first: .UseCustomFont(Path.Combine(env.WebRootPath, \"fonts\", \"my-font.ttf\")); ");
@@ -83,6 +86,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private void AddWaves(int width, int height, SKBitmap pic)
     {
+        using var span = Diag.Span("AddWaves", "captcha");
+
         using var copy = new SKBitmap();
         pic.CopyTo(copy);
 
@@ -114,6 +119,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private void CreateNoises(SKCanvas canvas)
     {
+        using var span = Diag.Span("CreateNoises", "captcha");
+
         using var shader = SKShader.CreatePerlinNoiseTurbulence(_options.CaptchaNoise.BaseFrequencyX,
             _options.CaptchaNoise.BaseFrequencyY, _options.CaptchaNoise.NumOctaves, _options.CaptchaNoise.Seed);
 
@@ -124,6 +131,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private static float GetTextWidth(string text, float fontSize, SKPaint textPaint)
     {
+        using var span = Diag.Span("GetTextWidth", "captcha");
+
         using var blob = textPaint.Typeface.OpenStream().ToHarfBuzzBlob();
         using var hbFace = new Face(blob, index: 0);
         using var hbFont = new Font(hbFace);
@@ -141,6 +150,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private static SKRect GetTextBounds(string text, SKPaint textPaint)
     {
+        using var span = Diag.Span("GetTextBounds", "captcha");
+
         var textBounds = new SKRect();
         textPaint.MeasureText(text, ref textBounds);
 
@@ -149,6 +160,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private void DrawText(string text, SKCanvas canvas, SKShaper shaper, SKPaint textPaint, SKRect textBounds)
     {
+        using var span = Diag.Span("DrawText", "captcha");
+
         var x = TextMargin + textBounds.Left;
         var y = Math.Abs(textBounds.Top) + TextMargin;
 
@@ -182,6 +195,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private static void DrawRectangle(SKCanvas canvas, float width, float height)
     {
+        using var span = Diag.Span("DrawRectangle", "captcha");
+
         using var skPaint = new SKPaint
         {
             Color = SKColors.LightGray,
@@ -194,6 +209,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private static SKTypeface GetFont(string fontName, string? customFontPath)
     {
+        using var span = Diag.Span("GetFont", "captcha");
+
         if (string.IsNullOrWhiteSpace(customFontPath))
         {
             return FontsTypeface.GetOrAdd(fontName, SKTypeface.FromFamilyName);
@@ -209,6 +226,8 @@ public class CaptchaImageProvider(IRandomNumberProvider randomNumberProvider, IO
 
     private static byte[] ToPng(SKBitmap bitmap)
     {
+        using var span = Diag.Span("ToPng", "captcha");
+
         using var data = bitmap.Encode(SKEncodedImageFormat.Png, quality: 100);
         using var memory = new MemoryStream();
         data.SaveTo(memory);

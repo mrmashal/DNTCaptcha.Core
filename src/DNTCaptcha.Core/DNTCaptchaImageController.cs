@@ -14,6 +14,12 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Distributed;
+using Phaa.AzmoonOnline.App;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
+
+
 #if NET7_0 || NET8_0 || NET9_0
 using Microsoft.AspNetCore.RateLimiting;
 #endif
@@ -39,6 +45,8 @@ public class DNTCaptchaImageController(
     ILogger<DNTCaptchaImageController> logger,
     ISerializationProvider serializationProvider,
     Func<DisplayMode, ICaptchaTextProvider> captchaTextProvider, //mmm
+    IDistributedCache distributedCache, //mmm
+    DntCaptchaSettings dntCaptchaSettings, //mmm
     IOptions<DNTCaptchaOptions> options) : Controller
 {
     private const string TheReceivedDataIsNullOrEmpty = "The received data is null or empty.";
@@ -75,8 +83,14 @@ public class DNTCaptchaImageController(
         tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
 
     //mmm
+    private const string ImageCacheKeyPrefix = ".Cimg:";
     private readonly Func<DisplayMode, ICaptchaTextProvider> _captchaTextProvider =
         captchaTextProvider ?? throw new ArgumentNullException(nameof(captchaTextProvider));
+    private readonly IDistributedCache _distributedCache =
+        distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+    private readonly DntCaptchaSettings _dntCaptchaSettings =
+        dntCaptchaSettings ?? throw new ArgumentNullException(nameof(dntCaptchaSettings));
+    private static Random Rnd = new Random();
 
     /// <summary>
     ///     The ViewContext Provider
@@ -197,6 +211,8 @@ public class DNTCaptchaImageController(
     [HttpPost("{data}")]
     public IActionResult Show(string data)
     {
+        using var span = Diag.Span("DNTCaptchaImageShow", "api");
+
         try
         {
             if (string.IsNullOrWhiteSpace(data))
@@ -232,8 +248,7 @@ public class DNTCaptchaImageController(
                 return BadRequest(error: "Couldn't decrypt the text.");
             }
 
-            var image = _captchaImageProvider.DrawCaptcha(decryptedText, model.ForeColor, model.BackColor,
-                model.FontSize, model.FontName);
+            var image = GetImage(decryptedText, model); //mmm
 
             return new FileContentResult(image, contentType: "image/png");
         }
@@ -250,6 +265,8 @@ public class DNTCaptchaImageController(
     [HttpPost("{number}")]
     public IActionResult ShowForLoadTest(int number)
     {
+        using var span = Diag.Span("DNTCaptchaImageShowForLoadTest", "api");
+
         try
         {
             var model = new CaptchaImageParams
@@ -264,8 +281,7 @@ public class DNTCaptchaImageController(
 
 
 
-            var image = _captchaImageProvider.DrawCaptcha(decryptedText, model.ForeColor, model.BackColor,
-                model.FontSize, model.FontName);
+            var image = GetImage(decryptedText, model);
 
             return new FileContentResult(image, contentType: "image/png");
         }
@@ -275,5 +291,34 @@ public class DNTCaptchaImageController(
 
             return _options.ShowExceptions ? BadRequest(ex.ToString()) : BadRequest(TurnOnTheLogDebugLevel);
         }
+    }
+
+    //mmm
+    /// <summary>
+    /// Gets the captcha image from cache, or draws a new captcha image on cache miss.
+    /// </summary>
+    private byte[] GetImage(string decryptedText, CaptchaImageParams model)
+    {
+        var useCache = _dntCaptchaSettings.CachePercent > 0 && Rnd.Next(100) < _dntCaptchaSettings.CachePercent;
+
+        string imageCacheKey = null;
+        if (useCache)
+        {
+            var index = Rnd.Next(_dntCaptchaSettings.CacheMultiplier);
+            imageCacheKey = $"{ImageCacheKeyPrefix}{decryptedText}:{index}";
+            var cachedValueBytes = _distributedCache.Get(imageCacheKey);
+            if (cachedValueBytes != null)
+            {
+                return cachedValueBytes;
+            }
+        }
+
+        var image = _captchaImageProvider.DrawCaptcha(decryptedText, model.ForeColor, model.BackColor,
+                        model.FontSize, model.FontName);
+
+        if (useCache)
+            _distributedCache.Set(imageCacheKey, image);
+
+        return image;
     }
 }

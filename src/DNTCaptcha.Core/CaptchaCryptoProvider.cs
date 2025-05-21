@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Phaa.AzmoonOnline.App;
 
 namespace DNTCaptcha.Core;
 
@@ -33,6 +34,8 @@ public class CaptchaCryptoProvider : ICaptchaCryptoProvider
     /// </summary>
     public (string HashString, byte[] HashBytes) Hash(string inputText)
     {
+        using var span = Diag.Span("CaptchaCryptoProvider.Hash", "captcha");
+
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(inputText));
 
         return (Encoding.UTF8.GetString(hash), hash);
@@ -43,6 +46,8 @@ public class CaptchaCryptoProvider : ICaptchaCryptoProvider
     /// </summary>
     public string? Decrypt(string inputText, bool ecb = false)
     {
+        using var span = Diag.Span("CaptchaCryptoProvider.Decrypt", "captcha");
+        
         if (string.IsNullOrWhiteSpace(inputText))
         {
             throw new ArgumentNullException(nameof(inputText));
@@ -59,6 +64,8 @@ public class CaptchaCryptoProvider : ICaptchaCryptoProvider
     /// </summary>
     public string Encrypt(string inputText, bool ecb = false)
     {
+        using var span = Diag.Span("CaptchaCryptoProvider.Encrypt", "captcha");
+
         if (string.IsNullOrWhiteSpace(inputText))
         {
             throw new ArgumentNullException(nameof(inputText));
